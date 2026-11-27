@@ -1,3 +1,4 @@
+& {
 # ============================================================================
 # MetalBar — Bare-Metal Windows 11 Avionics Installer
 #   irm https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | iex
@@ -101,3 +102,4 @@ if ($env:METALBAR_NO_LAUNCH -ne '1') {
 Write-Row ("        ${WHT}F$RST ${DIM}FREEZE$RST  ${WHT}L$RST ${DIM}LOW-GEAR$RST  ${WHT}K$RST ${DIM}KILL$RST  ${WHT}TAB$RST ${DIM}CTRL/SET$RST  ${WHT}CTRL+SHF+Q$RST ${DIM}QUIT$RST")
 Write-Host "$BDR+========================================================================+$RST"
 Write-Host ""
+}
