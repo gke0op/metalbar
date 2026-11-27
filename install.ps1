@@ -1,4 +1,4 @@
-﻿# ============================================================================
+# ============================================================================
 # MetalBar — Bare-Metal Windows 11 Avionics Installer
 #   irm https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | iex
 #   curl.exe -fsSL https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | powershell -NoProfile -Command -
