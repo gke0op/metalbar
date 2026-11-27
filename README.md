@@ -101,7 +101,7 @@ MetalBar queries the Windows kernel and WDDM directly in x86-64 assembly with an
 ### Global Hotkeys
 | Shortcut | Action |
 |---|---|
-| `Ctrl + Shift + Space` | Toggle HUD |
+| `Ctrl + Shift + Space` / Click bar | Toggle HUD |
 | `Ctrl + Shift + C` | Cycle theme (0–5) |
 | `Ctrl + Shift + B` | Toggle taskbar Ghost / Dark Strip |
 | `Ctrl + Shift + S` | Toggle 2× / 1× bar scale |

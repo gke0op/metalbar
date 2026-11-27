@@ -2941,6 +2941,8 @@ WndProc:
     je      .on_timer
     cmp     edx, WM_HOTKEY_
     je      .on_hotkey
+    cmp     edx, WM_LBUTTONDOWN_
+    je      .hk_hud
     cmp     edx, WM_MOUSEACTIVATE_
     je      .on_mouseactivate
     cmp     edx, WM_DISPLAYCHANGE_
@@ -3005,6 +3007,7 @@ WndProc:
     xor     ecx, ecx
     call    sync_disp_cores
     call    present_hud
+    call    assert_zorder
 
     cmp     dword [g_panel_open], 0
     je      .timer_done
@@ -3514,6 +3517,7 @@ start:
     call    check_fs_transition
     test    eax, eax
     jnz     .main_loop
+    call    assert_zorder
 
 .vsync_chk_poll:
     mov     rcx, rbx
