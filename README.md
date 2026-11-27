@@ -37,18 +37,17 @@ curl.exe -fsSL https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps
 ```
 
 ```text
-+========================================================================+
-|  METALBAR // WINDOWS 11 x86-64 TELEMETRY HUD      [FASM | 4 OS DLLS]   |
-+========================================================================+
-|  [1/4] QUERY    github.com/gke0op/metalbar/releases/latest             |
-|  [2/4] FETCH    v3.0.1 -> metalbar.exe                                 |
-|          [########################################] 39424 B (38.5 KiB) |
-|  [3/4] VERIFY   SHA256:xxxxxxxxxxxx [OK]  PE64:[OK]  ZERO-CRT:[OK]     |
-|  [4/4] INSTALL  %LOCALAPPDATA%\MetalBar\metalbar.exe                   |
-+------------------------------------------------------------------------+
-|  ONLINE  CTRL+SHIFT+SPACE HUD  SPACE HISTORY  CTRL+SHF+C THEMES        |
-|          F SUSPEND  L IDLE  K KILL  TAB CTRL/SET  CTRL+SHF+Q QUIT      |
-+========================================================================+
+ __  __   ____  _____   ___    _      ____    ___   ____          v3.0.2
+|  \/  | | __| |_   _| / _ \  | |    | __ )  / _ \ |  _ \    x86-64 FASM
+|_|\/|_| |____|  |_|  /_/ \_\ |____| |____) /_/ \_\|_| \_\     38.50 KiB
+------------------------------------------------------------------------
+FETCH   [==========================================] 39,424 B 100%  [OK]
+SHA256  b3497a801fe8e5d7        [OK] | .text  30,276 B   .rdata  4,352 B
+PE64    AMD64 / 4 STATIC DLLS   [OK] | .data     140 B   .bss   1.64 MiB
+IAT     ntdll k32 u32 gdi32     [OK] | HEAP        0 B   CRT         0 B
+------------------------------------------------------------------------
+INSTALL %LOCALAPPDATA%\MetalBar\metalbar.exe (38.50 KiB)            [OK]
+KEYS    CLICK BAR -> HUD | SPACE 5M | F/L/K PROC | CTRL+SHF+C THEME
 ```
 
 Portable binary also available directly under [Releases](https://github.com/gke0op/metalbar/releases/latest). No installer wizard, no admin privileges required.
@@ -130,8 +129,8 @@ MetalBar queries the Windows kernel and WDDM directly in x86-64 assembly with an
 | Section | Size | Contents |
 |---|---:|---|
 | **PE64 on disk** | **`39,424 B` (`38.50 KiB`)** | Single `FASM 1.73.35` output |
-| **`.text`** | **`30,277 B`** | Telemetry, rasterizer, Win32 host, VSync loop |
-| **`.rdata`** | **`4,376 B`** | 768 B 8×8 font, color tables, UI strings |
+| **`.text`** | **`30,276 B`** | Telemetry, rasterizer, Win32 host, VSync loop |
+| **`.rdata`** | **`4,352 B`** | 768 B 8×8 font, color tables, UI strings |
 | **`.data`** | **`140 B`** | Runtime defaults (overridden by 64 B `metalbar.cfg`) |
 | **`.bss`** | **`1.64 MiB`** *(0 B on disk)* | 1.5 MiB `SPI5` buffer, 1024-proc table, 300-frame history |
 | **`.idata`** | **4 static DLLs** | `NTDLL.DLL`, `KERNEL32.DLL`, `USER32.DLL`, `GDI32.DLL` |
