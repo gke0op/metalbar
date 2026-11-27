@@ -1,0 +1,13 @@
+# Build outputs & runtime config (prebuilt binaries ship via GitHub Releases)
+bin/
+*.bmp
+*.exe
+*.cfg
+metalbar_shot.txt
+
+# Local scratch screenshots at root (docs/*.png are intentionally tracked!)
+/theme_*.png
+/metalbar_*.png
+
+# Third-party assembler toolchain & reference headers (auto-fetched via build.ps1 -FetchFasm)
+tools/
