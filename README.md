@@ -33,7 +33,7 @@ irm https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | iex
 
 ### `curl` (Command Prompt / PowerShell)
 ```powershell
-curl.exe -fsSL https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | powershell -NoProfile -Command -
+curl.exe -fsSL https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | powershell -NoProfile -Command "$input | Out-String | iex"
 ```
 
 ```text
