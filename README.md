@@ -1,175 +1,166 @@
 <div align="center">
 
-# ⚡ METALBAR
+# METALBAR
 
-**A `38.5 KiB` Windows 11 Taskbar Avionics HUD, 5-Minute Black-Box DVR & Per-Process VRAM Radar written in pure hand-crafted x86-64 FASM assembly.**
+**`38.5 KiB` Windows 11 x86-64 taskbar telemetry bar, oscilloscope HUD, per-process VRAM monitor, and 5-minute ring-buffer recorder in pure FASM assembly.**
 
-*Zero CRT · Zero COM · Zero .NET · Zero WMI · Zero PDH · Zero DirectX · Zero Kernel Drivers · Zero Heap (`malloc`) · Strictly 4 Static OS DLLs*
+`Zero CRT` · `Zero COM` · `Zero .NET` · `Zero WMI` · `Zero PDH` · `Zero DirectX` · `Zero Drivers` · `Zero Heap` · `4 Static OS DLLs`
 
 <p>
-  <img alt="Size" src="https://img.shields.io/badge/PE64%20Binary-38.5%20KiB-00d4ff?style=flat-square" />
-  <img alt="Language" src="https://img.shields.io/badge/x86--64-FASM%201.73-ff9e20?style=flat-square" />
-  <img alt="Imports" src="https://img.shields.io/badge/Static%20DLLs-4%20(ntdll%2Fkernel32%2Fuser32%2Fgdi32)-44ff88?style=flat-square" />
-  <img alt="Platform" src="https://img.shields.io/badge/OS-Windows%2011%20x64-3a72b2?style=flat-square" />
+  <img alt="Size" src="https://img.shields.io/badge/PE64-38.5%20KiB-00d4ff?style=flat-square" />
+  <img alt="Assembler" src="https://img.shields.io/badge/x86--64-FASM%201.73-ff9e20?style=flat-square" />
+  <img alt="Imports" src="https://img.shields.io/badge/Static%20DLLs-4-44ff88?style=flat-square" />
+  <img alt="OS" src="https://img.shields.io/badge/OS-Windows%2011%20x64-3a72b2?style=flat-square" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-ff3b30?style=flat-square" />
 </p>
 
-<img src="docs/hud_blueprint_vram.png" alt="MetalBar v3.0 Flight Deck — Blueprint CAD with Per-Process VRAM Radar" width="760" />
+<img src="docs/hud_blueprint_vram.png" alt="MetalBar HUD — Blueprint CAD" width="760" />
 
 <br />
 
-<img src="docs/bar.png" alt="MetalBar Always-On Taskbar Telemetry Strip" />
+<img src="docs/bar.png" alt="MetalBar taskbar telemetry strip" />
 
 </div>
 
 ---
 
-## One-Line Avionics Install (Windows 11 x64)
+## Install (Windows 11 x64)
 
 ### PowerShell
 ```powershell
 irm https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | iex
 ```
 
-### `curl` (Command Prompt / PowerShell)
+### `curl` (cmd / PowerShell)
 ```powershell
 curl.exe -fsSL https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | powershell -NoProfile -Command "$input | Out-String | iex"
 ```
 
 ```text
 +========================================================================+
-|  METALBAR // BARE-METAL WINDOWS 11 AVIONICS      [x86-64 FASM | 4 DLL] |
+|  METALBAR // WINDOWS 11 x86-64 TELEMETRY HUD      [FASM | 4 OS DLLS]   |
 +========================================================================+
-|  [1/4] TELEM    Querying github.com/gke0op/metalbar/releases/latest... |
+|  [1/4] QUERY    github.com/gke0op/metalbar/releases/latest             |
 |  [2/4] FETCH    v3.0.1 -> metalbar.exe                                 |
-|        [########################################] 39424 B (38.5 KiB)   |
+|          [########################################] 39424 B (38.5 KiB) |
 |  [3/4] VERIFY   SHA256:xxxxxxxxxxxx [OK]  PE64:[OK]  ZERO-CRT:[OK]     |
 |  [4/4] INSTALL  %LOCALAPPDATA%\MetalBar\metalbar.exe                   |
 +------------------------------------------------------------------------+
-|  ONLINE  CTRL+SHIFT+SPACE HUD  SPACE BLACKBOX  CTRL+SHF+C THEMES       |
-|          F FREEZE  L LOW-GEAR  K KILL  TAB CTRL/SET  CTRL+SHF+Q QUIT   |
+|  ONLINE  CTRL+SHIFT+SPACE HUD  SPACE HISTORY  CTRL+SHF+C THEMES        |
+|          F SUSPEND  L IDLE  K KILL  TAB CTRL/SET  CTRL+SHF+Q QUIT      |
 +========================================================================+
 ```
 
-> Or download **`metalbar.exe`** directly from [GitHub Releases](https://github.com/gke0op/metalbar/releases/latest) — single portable executable, no installer wizard, no admin rights required.
+Portable binary also available directly under [Releases](https://github.com/gke0op/metalbar/releases/latest). No installer wizard, no admin privileges required.
 
 ---
 
-## Why MetalBar?
+## Technical Overview
 
-Modern Windows hardware monitors ship 150–400 MB Electron/WebView2/.NET runtimes, burn 200+ MB of RAM, spawn dozens of threads, break on non-English Windows locales via localized PDH counters, and keep laptop dGPUs awake out of `D3cold`.
+MetalBar queries the Windows kernel and WDDM directly in x86-64 assembly with an embedded 768-byte 8×8 monochrome bitmap font and software ARGB rasterizer:
 
-**MetalBar** talks straight to the Windows kernel and GPU subsystem in **10,200 lines of pure x86-64 assembly** with an embedded **768-byte 8×8 bitmap font** and SSE2-accelerated software rasterizer:
-
-* **Per-Process Dedicated VRAM Radar (`VRM` Column):** Uses `D3DKMTQueryStatistics(TYPE_PROCESS_SEGMENT_GROUP = 9, Local = 0)` — zero admin, zero drivers, works for **both CUDA/PyTorch/llama.cpp AND DirectX 12 / Vulkan / DWM** apps (even where NVML returns `NOT_AVAILABLE` on Windows WDDM). Spot who is hoarding your VRAM and kill/freeze them straight from the column.
-* **5-Minute Avionics Black-Box Flight Data Recorder (`Space`):** A zero-disk **`9.4 KiB`** static `.bss` ring buffer continuously records 300 seconds of `(CPU, RAM, GPU, VRAM, Temp, Power, Clock, Throttle, I/O, Top-1 CPU app)` even while the HUD is closed. Hit **`Space`** inside the HUD to freeze time, scrub backwards across all 5 oscilloscopes with **`Left`/`Right`** or mouse wheel, and tap **`E`** to snap straight to the last thermal throttle or VRAM spill.
-* **Direct Cockpit Process Control (`F` / `L` / `K`):**
-  * **`F` — Freeze / Thaw:** Calls `ntdll!NtSuspendProcess` / `NtResumeProcess` to freeze a runaway compile/script (or an entire grouped `[xN]` app swarm!) at **0% CPU** with an ice-cyan `F` indicator, then resumes it without losing state.
-  * **`L` — Low-Gear:** Toggles `IDLE_PRIORITY_CLASS` (`L` marker) so loud background jobs stay out of your foreground 165 Hz desktop.
-  * **`K` / `Del` — Hardened Quick-Kill:** Protected by self-PID blocking, a 13-process critical OS/shell denylist (`csrss`, `lsass`, `dwm`, `explorer`, etc.), and fresh-snapshot **64-bit UTF-16LE FNV-1a full-name hash** verification (zero PID-reuse TOCTOU races).
-* **Native Monitor VSync + Sub-ms Jitter Radar:** Auto-detects your monitor's refresh rate via `EnumDisplaySettingsA` (60 / 144 / 165 / 240 / 360 Hz), pairs `dwmapi!DwmFlush` with dirty-frame skipping + RDTSC-backed `QueryPerformanceCounter` to measure live compositor frame-pacing jitter (`JIT 0.3m`), and drops back to zero-CPU blocking `GetMessageA` the instant you close the HUD.
-* **Laptop `D3cold` Sleep Guard + Master Caution:** Lazily loads `nvml.dll` only when the dGPU is actually active (`g_vram_committed > 0`) so sleeping Optimus dGPUs are never woken at boot. Quiet, zero-blink Master Caution flags (`!TMP`, `!VRM`, `!RAM`) appear on the taskbar strip only when a real hardware fault trips.
+* **System Telemetry (Locale-Independent):** `NtQuerySystemInformation` classes `0` (physical pages), `2` (available RAM, kernel I/O bytes), `5` (up to 1024 processes, private working set, CPU time, per-process I/O, optional name grouping via 64-bit UTF-16LE FNV-1a hash), and `8` (total and per-logical-core CPU%).
+* **Per-Process Dedicated VRAM (`VRM` Column):** `D3DKMTQueryStatistics(TYPE_PROCESS_SEGMENT_GROUP = 9, Local = 0)` — 1 call per accessible process, no admin rights, works across CUDA, Direct3D 12, Vulkan, and DWM (bypassing Windows WDDM NVML `NOT_AVAILABLE`).
+* **GPU Metrics & `D3cold` Guard:** `D3DKMTQueryStatistics(SEGMENT / NODE)` for dedicated VRAM and iGPU utilization; lazy `LoadLibraryA("nvml.dll")` for NVIDIA utilization, temperature, power, clocks, and throttle flags only while `g_vram_committed > 0`, keeping idle Optimus dGPUs in `D3cold`.
+* **5-Minute Ring-Buffer History (`Space`):** `300 × 32 B` (`9.4 KiB`) static `.bss` ring buffer recording 1 Hz frames continuously (zero disk I/O). Pressing `Space` pauses the HUD and scrubs all 5 waveforms backward (`Left`/`Right`, `PgUp`/`PgDn`, mouse wheel); `E` jumps to the previous fault frame (`!TMP`, `!VRM`, `!PWR`, `!RAM`, `!CPU`).
+* **Process Controls (`F` / `L` / `K`):**
+  * `F`: `ntdll!NtSuspendProcess` / `NtResumeProcess` (toggles suspend/resume on single PID or grouped process set).
+  * `L`: `SetPriorityClass` (`IDLE_PRIORITY_CLASS` / `NORMAL_PRIORITY_CLASS`).
+  * `K` / `Del` → `Y`: `TerminateProcess`. All three enforce `PID > 4`, self-PID exclusion, a 13-name critical OS denylist (`csrss.exe`, `lsass.exe`, `dwm.exe`, `explorer.exe`, etc.), and fresh-snapshot 64-bit UTF-16LE name-hash verification against PID reuse.
+* **Native VSync & Jitter Measurement:** Auto-detects display refresh rate via `EnumDisplaySettingsA`; uses `dwmapi!DwmFlush` with dirty-frame skipping while the HUD is open and `QueryPerformanceCounter` to track compositor/timer jitter (`JIT X.Xm`). Falls back to blocking `GetMessageA` when the HUD is closed (`~0.00–0.03%` CPU).
+* **Fault Flags (`FAULT FLAGS`):** Optional non-blinking `!TMP` (`>= 90°C` or thermal throttle), `!VRM` (`>= 95%`), or `!RAM` (`>= 92%`) indicator on the taskbar strip.
 
 ---
 
-## Black-Box Time-Travel & Live `[SET]` Control Panel
+## Ring-Buffer Rewind & Settings
 
-| 5-Minute Black-Box Rewind (`Space` → `Left`/`Right` / `E`) | Live Persistent Settings (`[SET]` Tab, 15 Options) |
+| 5-Minute History Rewind (`Space` → `Left`/`Right`, `E`) | Live Settings (`[SET]` Tab, 15 Options, `metalbar.cfg`) |
 | :---: | :---: |
-| ![Black-Box Rewind](docs/hud_blackbox_rewind.png) | ![Settings Tab](docs/hud_settings.png) |
+| ![History Rewind](docs/hud_history_rewind.png) | ![Settings Tab](docs/hud_settings.png) |
 
 ---
 
-## 6 Signature Demoscene Themes (`Ctrl+Shift+C`)
-
-Each theme implements its own border geometry, scope well grid, waveform renderer, post-processing, and taskbar ghost-bar tint:
+## Themes (`Ctrl+Shift+C`)
 
 | `0` Obsidian Heat | `1` Phosphor CRT *(SSE2 scanlines + vector trace)* |
 | :---: | :---: |
 | ![Obsidian Heat](docs/theme_0_obsidian_heat.png) | ![Phosphor CRT](docs/theme_1_phosphor_crt.png) |
 
-| `2` Molten Forge *(9-segment LED VU-meter)* | `3` Synthgrid *(45° bevels + dot matrix + gradient)* |
+| `2` Molten Forge *(9-segment LED bars)* | `3` Synthgrid *(45° bevels + dot grid + 3-band fill)* |
 | :---: | :---: |
 | ![Molten Forge](docs/theme_2_molten_forge.png) | ![Synthgrid](docs/theme_3_synthgrid.png) |
 
-| `4` Blueprint CAD *(millimeter grid + stepped wireframe)* | `5` NERV Crimson *(diagonal `///` hazard stripes)* |
+| `4` Blueprint CAD *(16px grid + stepped trace)* | `5` NERV Crimson *(diagonal header stripes)* |
 | :---: | :---: |
 | ![Blueprint CAD](docs/theme_4_blueprint_cad.png) | ![NERV Crimson](docs/theme_5_nerv_crimson.png) |
 
 ---
 
-## Cockpit Controls
+## Controls
 
-### Global Hotkeys (Work Anywhere)
+### Global Hotkeys
 | Shortcut | Action |
 |---|---|
-| **`Ctrl + Shift + Space`** | Toggle Oscilloscope HUD open / closed |
-| **`Ctrl + Shift + C`** | Cycle through all 6 visual themes |
-| **`Ctrl + Shift + B`** | Toggle Taskbar Ghost vs. Dark Strip backdrop |
-| **`Ctrl + Shift + S`** | Toggle 2× Chunky Retro vs. 1× Micro Pixel scale |
-| **`Ctrl + Shift + A`** | Cycle dock anchor (`Bottom-Left` / `Bottom-Right` / `Top-Left` / `Top-Right`) |
-| **`Ctrl + Shift + Left / Right`** | Nudge taskbar bar horizontally (`±32 px`) |
-| **`Ctrl + Shift + H`** | Hide / show MetalBar |
-| **`Ctrl + Shift + Q`** | Cleanly exit MetalBar |
+| `Ctrl + Shift + Space` | Toggle HUD |
+| `Ctrl + Shift + C` | Cycle theme (0–5) |
+| `Ctrl + Shift + B` | Toggle taskbar Ghost / Dark Strip |
+| `Ctrl + Shift + S` | Toggle 2× / 1× bar scale |
+| `Ctrl + Shift + A` | Cycle dock anchor (BL / BR / TL / TR) |
+| `Ctrl + Shift + Left / Right` | Nudge bar ±32 px |
+| `Ctrl + Shift + H` | Hide / show bar |
+| `Ctrl + Shift + Q` | Exit |
 
-### Inside the HUD
-| Key / Mouse | Action |
+### Inside HUD
+| Input | Action |
 |---|---|
-| **`Tab` / `1` / `2` / `3`** or Click Tabs | Switch between `[TELEM]`, `[CTRL]`, and `[SET]` |
-| **`Arrows`** / **Click Row** / **Mouse Wheel** | Navigate columns, scroll top-24 processes, edit settings |
-| **`Space`** *(or click top-right status)* | Enter / exit **5-Minute Black-Box Rewind Mode** |
-| **`Left` / `Right`** / **`PgUp` / `PgDn`** / **Wheel** *(in Black-Box)* | Scrub 1s / 15s / 3s backward & forward in time |
-| **`E`** | Auto-freeze & jump straight to the last hardware anomaly (`!TMP`/`!VRM`/`!PWR`/`!RAM`) |
-| **`F`** | **Freeze / Thaw** selected process (or grouped `*` app swarm) at 0% CPU |
-| **`L`** | Toggle **Low-Gear (`IDLE`)** background priority |
-| **`K` / `Delete`** → **`Y` / `N`** | Hardened Quick-Kill (works in `CPU`, `RAM`, `VRM`, and `IO`!) |
-| **`Esc` / `Alt + F4`** | Cleanly hide HUD & restore focus to previous window |
+| `Tab` / `1` / `2` / `3` / Click tab | Switch `[TELEM]` / `[CTRL]` / `[SET]` |
+| `Arrows` / Click row / Wheel | Select column, row, or edit setting |
+| `Space` / Click top-right | Toggle 5-minute history rewind |
+| `Left` / `Right` / `PgUp` / `PgDn` / Wheel *(paused)* | Scrub ±1s / ±15s / ±3s |
+| `E` | Pause and jump to previous fault frame |
+| `F` | Suspend / resume selected process(es) |
+| `L` | Toggle `IDLE` / `NORMAL` priority |
+| `K` / `Del` → `Y` / `N` | Terminate selected process(es) |
+| `Esc` / `Alt + F4` | Hide HUD and restore previous window focus |
 
 ---
 
-## Bare-Metal Architecture Scorecard
+## Binary Footprint
 
-| Section / Metric | MetalBar v3.0.1 | Notes |
+| Section | Size | Contents |
 |---|---:|---|
-| **PE64 Disk Size** | **`39,424 B` (`38.50 KiB`)** | Single-pass `FASM 1.73.35` output |
-| **`.text` (All Machine Code)** | **`30,317 B` (`29.61 KiB`)** | Telemetry + 6-theme rasterizer + VSync + Black-Box + UI |
-| **`.rdata` (Font + Tables + UI)** | **`4,376 B` (`4.27 KiB`)** | Includes 768 B embedded 8×8 monochrome ASCII font |
-| **`.data` (Defaults)** | **`140 B`** | Persisted in 64-byte `metalbar.cfg` beside exe |
-| **`.bss` (Static Zero-Heap)** | **`1.64 MiB`** *(0 B on disk)* | 1.5 MiB NT proc buffer, 1024-proc table, 300-frame Black-Box |
-| **Static PE64 Imports (`.idata`)** | **Strictly 4 OS DLLs** | `NTDLL.DLL`, `KERNEL32.DLL`, `USER32.DLL`, `GDI32.DLL` |
-| **Dynamic Optional Loaders** | `LoadLibraryA` at runtime | `nvml.dll` (lazy D3cold-safe), `dwmapi.dll`, `powrprof.dll`, `iphlpapi.dll`, `advapi32.dll` |
-| **Locale Dependence** | **Zero** | Direct NT classes `0/2/5/8` & `D3DKMT` — works on any Windows language |
-| **Idle CPU (HUD Closed)** | **`~0.00–0.03%`** | Blocking `GetMessageA`, zero polling of processes/NIC/battery when closed |
+| **PE64 on disk** | **`39,424 B` (`38.50 KiB`)** | Single `FASM 1.73.35` output |
+| **`.text`** | **`30,277 B`** | Telemetry, rasterizer, Win32 host, VSync loop |
+| **`.rdata`** | **`4,376 B`** | 768 B 8×8 font, color tables, UI strings |
+| **`.data`** | **`140 B`** | Runtime defaults (overridden by 64 B `metalbar.cfg`) |
+| **`.bss`** | **`1.64 MiB`** *(0 B on disk)* | 1.5 MiB `SPI5` buffer, 1024-proc table, 300-frame history |
+| **`.idata`** | **4 static DLLs** | `NTDLL.DLL`, `KERNEL32.DLL`, `USER32.DLL`, `GDI32.DLL` |
+
+Optional dynamic loads (`LoadLibraryA`): `nvml.dll`, `dwmapi.dll`, `powrprof.dll`, `iphlpapi.dll`, `advapi32.dll`.
 
 ### Source Layout
 ```text
 src/
-├── metalbar.asm     Win32 dual-window host, Z-order hook, DwmFlush VSync + QPC jitter, config v5
-├── hud_raster.inc   6-theme oscilloscope engine, Black-Box overlay, SSE2 CRT scanlines, 3 tabs
-├── telemetry.inc    NT syscalls 0/2/5/8, D3DKMT Type 9 per-proc VRAM, lazy NVML, Black-Box, Freeze/Kill
-├── raster.inc       Always-on taskbar strip rasterizer, branchless color tables, Master Caution
-├── metal_defs.inc   Live-verified Win11 x64 (Build 26200) struct offsets & constants
-└── font8x8.inc      768-byte embedded 8x8 ASCII bitmap font (slashed zeroes)
+├── metalbar.asm     Win32 host, Z-order WinEventHook, DwmFlush VSync, QPC jitter, config v5
+├── hud_raster.inc   6-theme HUD rasterizer, history overlay, SSE2 CRT scanlines, 3 tabs
+├── telemetry.inc    NT classes 0/2/5/8, D3DKMT Type 9 VRAM, lazy NVML, ring buffer, process actions
+├── raster.inc       Taskbar bar rasterizer, branchless theme tables, fault flags
+├── metal_defs.inc   Win11 x64 (Build 26200) struct offsets and constants
+└── font8x8.inc      768-byte 8x8 ASCII bitmap font
 ```
 
 ---
 
-## Build From Source (0.2 Seconds)
+## Build From Source
 
-Requires only [flat assembler (FASM 1.73.35)](https://flatassembler.net/) — no Visual Studio, no Windows SDK, no CMake, no Rust/Go toolchain:
+Requires only [FASM 1.73.35](https://flatassembler.net/) (no Visual Studio, Windows SDK, or CMake):
 
 ```powershell
 git clone https://github.com/gke0op/metalbar.git
 cd metalbar
-
-# Auto-downloads official FASM 1.73.35 to tools\fasm\ and assembles bin\metalbar.exe:
 .\build.ps1 -FetchFasm
-
-# Run it!
 .\bin\metalbar.exe
 ```
-
-Subsequent rebuilds take ~0.2 seconds with `.\build.ps1`.
 
 ---
 

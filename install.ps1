@@ -1,5 +1,5 @@
 # ============================================================================
-# MetalBar — Bare-Metal Windows 11 Avionics Installer
+# MetalBar — Windows 11 x86-64 Installer
 #   irm https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | iex
 #   curl.exe -fsSL https://raw.githubusercontent.com/gke0op/metalbar/main/install.ps1 | powershell -NoProfile -Command "$input | Out-String | iex"
 # ============================================================================
@@ -29,11 +29,10 @@ function Write-Row([string]$left, [string]$color = $WHT) {
 
 Write-Host ""
 Write-Host "$BDR+========================================================================+$RST"
-Write-Row ("${CYN}METALBAR$RST ${DIM}//$RST ${WHT}BARE-METAL WINDOWS 11 AVIONICS$RST   ${AMB}[x86-64 FASM | 4 DLL]$RST")
+Write-Row ("${CYN}METALBAR$RST ${DIM}//$RST ${WHT}WINDOWS 11 x86-64 TELEMETRY HUD$RST   ${AMB}[FASM | 4 OS DLLS]$RST")
 Write-Host "$BDR+========================================================================+$RST"
 
-# 1. Query latest GitHub release
-Write-Row ("${DIM}[1/4]$RST ${WHT}TELEM   $RST ${DIM}Querying github.com/$Repo/releases/latest...$RST")
+Write-Row ("${DIM}[1/4]$RST ${WHT}QUERY   $RST ${DIM}github.com/$Repo/releases/latest$RST")
 $headers = @{ "User-Agent" = "MetalBar-Installer" }
 $rel = Invoke-RestMethod -Uri $ApiUrl -Headers $headers
 $tag = $rel.tag_name
@@ -41,7 +40,6 @@ $exeAsset = $rel.assets | Where-Object { $_.name -eq "metalbar.exe" } | Select-O
 $sumAsset = $rel.assets | Where-Object { $_.name -eq "SHA256SUMS.txt" } | Select-Object -First 1
 if (-not $exeAsset) { throw "Release $tag is missing metalbar.exe asset." }
 
-# 2. Download binary & checksum
 New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
 $tmpExe = "$ExePath.tmp"
 $tmpSum = Join-Path $InstallDir "SHA256SUMS.txt"
@@ -52,7 +50,6 @@ $sz = (Get-Item $tmpExe).Length
 $kib = [Math]::Round($sz / 1024.0, 2)
 Write-Row ("        ${CYN}[########################################]$RST ${WHT}$sz B$RST ${DIM}($kib KiB)$RST")
 
-# 3. Verify SHA-256 + PE64 x86-64 header
 $shaStatus = "${AMB}SKIP$RST"
 $actualHash = (Get-FileHash -Path $tmpExe -Algorithm SHA256).Hash.ToLower()
 if ($sumAsset) {
@@ -81,7 +78,6 @@ if (-not $isPe64) {
 $shortSha = $actualHash.Substring(0, 12)
 Write-Row ("${DIM}[3/4]$RST ${WHT}VERIFY  $RST SHA256:${DIM}$shortSha$RST [$shaStatus]  PE64:[${GRN}OK$RST]  ZERO-CRT:[${GRN}OK$RST]")
 
-# 4. Hot-swap binary cleanly
 $wasRunning = Get-Process -Name metalbar -ErrorAction SilentlyContinue
 if ($wasRunning) {
     Stop-Process -Name metalbar -Force -ErrorAction SilentlyContinue
@@ -94,10 +90,10 @@ Write-Host "$BDR+---------------------------------------------------------------
 
 if ($env:METALBAR_NO_LAUNCH -ne '1') {
     Start-Process -FilePath $ExePath
-    Write-Row ("${GRN}ONLINE$RST  ${WHT}CTRL+SHIFT+SPACE$RST ${DIM}HUD$RST  ${WHT}SPACE$RST ${DIM}BLACKBOX$RST  ${WHT}CTRL+SHF+C$RST ${DIM}THEMES$RST")
+    Write-Row ("${GRN}ONLINE$RST  ${WHT}CTRL+SHIFT+SPACE$RST ${DIM}HUD$RST  ${WHT}SPACE$RST ${DIM}HISTORY$RST  ${WHT}CTRL+SHF+C$RST ${DIM}THEMES$RST")
 } else {
     Write-Row ("${GRN}READY $RST  Run: ${CYN}$dispPath$RST")
 }
-Write-Row ("        ${WHT}F$RST ${DIM}FREEZE$RST  ${WHT}L$RST ${DIM}LOW-GEAR$RST  ${WHT}K$RST ${DIM}KILL$RST  ${WHT}TAB$RST ${DIM}CTRL/SET$RST  ${WHT}CTRL+SHF+Q$RST ${DIM}QUIT$RST")
+Write-Row ("        ${WHT}F$RST ${DIM}SUSPEND$RST  ${WHT}L$RST ${DIM}IDLE$RST  ${WHT}K$RST ${DIM}KILL$RST  ${WHT}TAB$RST ${DIM}CTRL/SET$RST  ${WHT}CTRL+SHF+Q$RST ${DIM}QUIT$RST")
 Write-Host "$BDR+========================================================================+$RST"
 Write-Host ""

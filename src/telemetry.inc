@@ -1,16 +1,13 @@
 ; ============================================================================
-; telemetry.inc — Pure Ring-3 Bare-Metal Telemetry & Flight Deck Engine v3.0
+; telemetry.inc — Pure Ring-3 System Telemetry & Process Control Engine v3.0.1
 ; Zero CRT, zero heap, zero float, zero PDH, zero WMI, zero COM, zero drivers.
 ;
-; v3.0 "FLIGHT DECK" Breakthroughs:
-;   1. Per-Process Dedicated VRAM Radar via D3DKMT Type 9 (PROCESS_SEGMENT_GROUP,
-;      1 call/proc, zero admin, works on CUDA + D3D12 + Vulkan + DWM!)
-;   2. 5-Minute Static Black-Box Flight Data Recorder (300 frames @ 1 Hz, 9.4 KiB
-;      .bss, zero disk I/O, automatic thermal/power/VRAM/RAM/CPU fault tagging!)
-;   3. Cockpit Process Control: Hardened Quick-Kill, NtSuspendProcess/NtResumeProcess
-;      [F] Freeze/Thaw, and SetPriorityClass(IDLE/NORMAL) [L] Low-Gear — all
-;      protected by self-PID guard, 13-proc OS denylist & 64-bit hash verification!
-;   4. Master Caution Annunciator flags (thermal/VRAM spill/RAM crit)
+; Capabilities:
+;   1. Per-process dedicated VRAM via D3DKMT Type 9 (PROCESS_SEGMENT_GROUP)
+;   2. 5-minute 1 Hz static ring buffer (300 frames, 9.4 KiB .bss, zero disk)
+;   3. Process actions: TerminateProcess, NtSuspendProcess/NtResumeProcess,
+;      SetPriorityClass(IDLE/NORMAL) — self-PID, OS denylist & 64-bit hash safe
+;   4. Threshold fault flags (!TMP / !VRM / !RAM)
 ; ============================================================================
 
 MAX_HW_GPUS     = 4

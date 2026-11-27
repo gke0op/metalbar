@@ -1,20 +1,15 @@
 ; ============================================================================
-; metalbar.asm — Pure x86-64 FASM Bare-Metal Windows 11 Telemetry HUD v3.0
-;                "FLIGHT DECK" EDITION
+; metalbar.asm — Pure x86-64 FASM Windows 11 Telemetry Bar & HUD v3.0.1
 ;
 ; Zero CRT, zero COM, zero UIA, zero PDH, zero WMI, zero DirectX, zero fonts.
 ; Strictly 4 static OS DLLs: ntdll, kernel32, user32, gdi32.
 ;
-; v3.0 "FLIGHT DECK" Breakthroughs:
-;   1. Live Per-Process Dedicated VRAM Radar (D3DKMT Type 9 PROCESS_SEGMENT_GROUP,
-;      zero admin, CUDA + D3D12 + Vulkan + DWM!) right inside VRM column
-;   2. 5-Minute Avionics Black-Box Flight Data Recorder (300 frames @ 1 Hz in
-;      9.4 KiB static .bss — Space freezes time, L/R scrubs 5 scopes, E jumps
-;      directly to last thermal/VRAM/power anomaly!)
-;   3. Cockpit Process Control: [F] Freeze/Thaw (NtSuspendProcess/NtResumeProcess),
-;      [L] Low-Gear IDLE priority, [K] Hardened Quick-Kill (across CPU/RAM/VRM/IO!)
-;   4. Master Caution Annunciator (!TMP / !VRM / !RAM taskbar pulse) +
-;      RDTSC/QPC Sub-ms Compositor/Scheduler Jitter Radar (JIT X.Xm)!
+; Features:
+;   1. Per-process dedicated VRAM via D3DKMT Type 9 (PROCESS_SEGMENT_GROUP)
+;   2. 5-minute 1 Hz static ring-buffer history (300 frames, 9.4 KiB .bss)
+;   3. Direct process control: F (NtSuspendProcess/NtResumeProcess),
+;      L (IDLE/NORMAL SetPriorityClass), K (TerminateProcess w/ denylist & hash)
+;   4. Fault flags (!TMP / !VRM / !RAM) + QPC/DwmFlush frame jitter readout
 ; ============================================================================
 
 format PE64 GUI 5.0
@@ -146,33 +141,33 @@ theme_out_col     dd 0xE0000000, 0xE600280A, 0xE6220D00, 0xE618052E, 0xEA051228,
 theme_pill_bg     dd 0xBC080B10, 0xC8020D05, 0xC8140D08, 0xC40A061C, 0xD4081B36, 0xCC120305
 theme_pill_bdr    dd 0xD8242C38, 0xE01D8842, 0xE4B86B14, 0xE09C28D8, 0xE46098D8, 0xE8D81E28
 
-; HUD Tab, Black-Box & Cockpit Status Strings
+; HUD Tab, History & Process Status Strings
 szTabTelem      db 'TELEM', 0
 szTabCtrl       db 'CTRL', 0
 szTabSet        db 'SET', 0
 szFootGpu       db 'GPU ', 0
 szFootVram      db 'DEDIC VRAM  ', 0
-szFootHint      db 'SPACE:BLACKBOX  F:FREEZE  L:LOW  K:KILL', 0
+szFootHint      db 'SPACE:HISTORY  F:SUSPEND  L:IDLE  K:KILL', 0
 szKillPfx       db '> KILL ', 0
 szKillAsk       db ']? PRESS [Y/N]', 0
-szBbTopPfx      db 'BLACKBOX  T-', 0
+szBbTopPfx      db 'HISTORY   T-', 0
 szBbFootHint    db '[L/R E]', 0
 szCtrlFoot      db 'UP/DN:SELECT  ENTER:RUN  TAB:NEXT  ESC:CLOSE', 0
 szSetFoot       db 'UP/DN:SEL  L/R:EDIT  ENTER:APPLY  AUTO-SAVED', 0
 szRateVsyncPfx  db '< VSYNC ', 0
 
-szStFrozen      db '> FROZEN (0% CPU): ', 0
-szStThawed      db '> THAWED RESUMED: ', 0
-szStLowOn       db '> LOW-GEAR IDLE: ', 0
+szStFrozen      db '> SUSPENDED (0% CPU): ', 0
+szStThawed      db '> RESUMED: ', 0
+szStLowOn       db '> IDLE PRIORITY: ', 0
 szStLowOff      db '> NORMAL PRIORITY: ', 0
-szStBlocked     db '> BLOCKED: PROTECTED OS/SELF PROCESS!', 0
+szStBlocked     db '> BLOCKED: PROTECTED OS/SELF PROCESS', 0
 szStDenied      db '> ACCESS DENIED (NEEDS ELEVATION): ', 0
-szStNoFault     db '> BLACKBOX: NO ANOMALIES IN RING YET!', 0
+szStNoFault     db '> HISTORY: NO FAULTS IN 5M RING', 0
 
-; Controls Tab Rows (12 Flight Deck rows!)
+; Controls Tab Rows (12 rows)
 szCk0  db 'CTRL+SHF+SPACE', 0
 szCk1  db 'SPACE (IN HUD)', 0
-szCk2  db 'E (IN BLACKBOX)', 0
+szCk2  db 'E (IN HISTORY)', 0
 szCk3  db 'F / L (ON PROC)', 0
 szCk4  db 'K / DELETE', 0
 szCk5  db 'ARROWS / CLICK', 0
@@ -184,10 +179,10 @@ szCk10 db 'CTRL+SHF+Q', 0
 szCk11 db 'ESC / ALT+F4', 0
 
 szCd0  db 'TOGGLE TELEMETRY HUD', 0
-szCd1  db 'PAUSE & REWIND 5M GRAPH', 0
-szCd2  db 'JUMP TO LAST SPIKE/WARN', 0
-szCd3  db 'PAUSE APP / LOW PRIORITY', 0
-szCd4  db 'FORCE KILL SELECTED APP', 0
+szCd1  db 'PAUSE & SCRUB 5M RING', 0
+szCd2  db 'JUMP TO LAST FAULT', 0
+szCd3  db 'SUSPEND / IDLE PRIORITY', 0
+szCd4  db 'TERMINATE SELECTED PROC', 0
 szCd5  db 'NAV COLUMNS & SELECT', 0
 szCd6  db 'CYCLE THEME   [ENTER]', 0
 szCd7  db 'TOGGLE BAR BG [ENTER]', 0
@@ -215,7 +210,7 @@ szSl8  db 'GROUP PIDS', 0
 szSl9  db 'HEAT THRESH', 0
 szSl10 db 'GPU D3 GUARD', 0
 szSl11 db 'FS AUTO-HIDE', 0
-szSl12 db 'MASTER CAUT', 0
+szSl12 db 'FAULT FLAGS', 0
 szSl13 db 'WIN STARTUP', 0
 szSl14 db 'RESET CONFIG', 0
 

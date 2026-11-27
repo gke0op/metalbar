@@ -1,10 +1,9 @@
 ; ============================================================================
-; raster.inc — Pure x86-64 Software ASCII Pixel Rasterizer v3.0 "FLIGHT DECK"
+; raster.inc — Pure x86-64 Software ASCII Pixel Rasterizer v3.0.1
 ;
-; v3.0 Additions:
-;   - Master Caution Annunciator (!TMP / !VRM / !RAM) right on the taskbar bar
-;     with subtle caution border pulse ONLY when a real hardware fault fires!
-;   - Expanded HUD_MAX_W = 944 (58 chars) so FULL mode + !TMP never clips
+; Features:
+;   - Non-blinking fault flags (!TMP / !VRM / !RAM) on the taskbar strip
+;   - HUD_MAX_W = 944 (58 chars) for FULL mode + fault flag
 ; ============================================================================
 
 HUD_MAX_W       = 944

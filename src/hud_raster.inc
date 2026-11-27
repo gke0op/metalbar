@@ -1,13 +1,12 @@
 ; ============================================================================
-; hud_raster.inc — Pure x86-64 6-Theme Avionics Oscilloscope HUD v3.0
+; hud_raster.inc — Pure x86-64 6-Theme Oscilloscope HUD Rasterizer v3.0.1
 ;
-; v3.0 "FLIGHT DECK" Visuals:
-;   - Live Per-Process Dedicated VRAM Leaderboard in VRM column (+ Kill/Freeze/Low!)
-;   - 5-Minute Black-Box Flight Data Rewind Mode (REC T-MM:SS, 5-scope rewind,
-;     red anomaly ticks, glowing playhead cursor, flight-log footer!)
-;   - Frozen [FRZ] (ice-cyan highlight) & Low-Gear [LOW] process indicators
-;   - Live QPC/DWM Compositor Jitter readout (JIT X.Xm) in GPU column Row 7
-;   - 2.5-second Cockpit Action status flash in footer
+; Features:
+;   - Per-process dedicated VRAM column (D3DKMT Type 9)
+;   - 5-minute 1 Hz ring-buffer rewind overlay (HISTORY T-MM:SS, fault ticks)
+;   - Suspended (F) & idle-priority (L) process indicators
+;   - QPC/DwmFlush frame jitter readout (JIT X.Xm) in GPU column Row 7
+;   - 2.5s process action status flash in footer
 ; ============================================================================
 
 PANEL_W         = 760

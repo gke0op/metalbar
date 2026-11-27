@@ -1,6 +1,6 @@
 ; ============================================================================
-; metal_defs.inc — Live-verified Windows 11 x64 (Build 26200) bare-metal defs
-; MetalBar v3.0 "FLIGHT DECK" — Zero CRT, COM, PDH, WMI, DirectX, Drivers!
+; metal_defs.inc — Live-verified Windows 11 x64 (Build 26200) struct offsets
+; MetalBar v3.0.1 — Zero CRT, COM, PDH, WMI, DirectX, Drivers.
 ; ============================================================================
 
 ; --- DPI Awareness ---
